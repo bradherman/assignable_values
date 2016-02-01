@@ -10,6 +10,7 @@ module AssignableValues
           define_humanized_values_instance_method
           define_query_class_methods
           define_checker_instance_methods
+          define_banger_instance_methods
         end
 
         def humanized_value(values, value) # we take the values because that contains the humanizations in case humanizations are hard-coded as a hash
@@ -81,6 +82,20 @@ module AssignableValues
             enhance_model do
               define_method "#{value}?" do
                 send(:"#{restriction.property}") == value
+              end
+            end
+          end
+        end
+
+        def define_banger_instance_methods
+          return unless self.options[:bang]
+          restriction = self
+
+          restriction.assignable_values(self).each do |value|
+            next unless value
+            enhance_model_singleton do
+              define_method "#{value}!" do
+                send(:"#{restriction.property}=", value)
               end
             end
           end
