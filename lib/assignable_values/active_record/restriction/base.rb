@@ -15,6 +15,7 @@ module AssignableValues
           define_assignable_values_method
           setup_validation
           define_status_methods
+          define_bang_methods
         end
 
         def validate_record(record)
@@ -132,6 +133,10 @@ module AssignableValues
           @options[:status]
         end
 
+        def bangable?
+          @options[:bang]
+        end
+
         def delegate_definition
           options[:through]
         end
@@ -196,12 +201,28 @@ module AssignableValues
           end
         end
 
+        def define_bang_methods
+          return unless bangable?
+          collisions = model.methods & bang_method_array(self)
+          if collisions.present?
+            raise MethodCollision, "Bang assignment collision(s): #{collisions*', '}"
+          end
+        end
+
         def status_method_array(record)
           parsed_values(record) + query_methods(record)
         end
 
+        def bang_method_array(record)
+          parsed_values(record) + bang_methods(record)
+        end
+
         def query_methods(record)
           parsed_values(record).map{ |x| x+'?' }
+        end
+
+        def bang_methods(record)
+          parsed_values(record).map{ |x| x+'!' }
         end
 
         def parsed_values(record)
